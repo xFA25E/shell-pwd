@@ -1,0 +1,16 @@
+#+TITLE: shell-pwd
+
+This package can display shell working directory in a buffer name. To enable
+just add ~shell-pwd-enable~ to ~shell-mode-hook~:
+
+~(add-hook 'shell-mode-hook 'shell-pwd-enable)~
+* Customization
+You can customize how new buffer name is chosen through
+~shell-pwd-generate-buffer-name-function~. Set to it your custom function. This
+function should take a string as an argumnt and return a string. The resulting
+string will be used as new buffer name.
+
+If you like the default name generating function, but you don't want directory
+path to be shortened, set ~shell-pwd-shorten-directory~ to nil.
+* Note
+  This won't work without dirtrack enabled.
