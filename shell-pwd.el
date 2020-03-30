@@ -84,24 +84,16 @@ as a file.
                (setq can-append nil)))))
     (cl-callf concat result (substring directory (1+ idx)))))
 
-(defun shell-pwd-generate-buffer-name (directory)
-  "Generate new shell buffer name based on `DIRECTORY'.
-If `DIRECTORY' is a remote directory, add tramp host and method
-to generated name"
-  (if (tramp-tramp-file-p directory)
-      (let* ((file-name (tramp-dissect-file-name   directory))
-             (method    (tramp-file-name-method    file-name))
-             (host      (tramp-file-name-host      file-name))
-             (localname (tramp-file-name-localname file-name)))
-        (format "*sh %s %s %s*"
-                host method
-                (if shell-pwd-shorten-directory
-                    (shell-pwd-shorten-directory localname)
-                  localname)))
-    (format "*sh %s*"
+(defun shell-pwd-generate-buffer-name (dir)
+  "Generate new shell buffer name based on `DIR'.
+If `DIR' is a remote directory, add tramp host and method to generated name"
+  (let ((name (or (file-remote-p dir 'localname) dir))
+        (host (if-let ((host (file-remote-p dir 'host))) (concat host " ") ""))
+        (user (if-let ((user (file-remote-p dir 'user))) (concat user "@") "")))
+    (format "*sh %s%s%s*" user host
             (if shell-pwd-shorten-directory
-                (shell-pwd-shorten-directory directory)
-              directory))))
+                (shell-pwd-shorten-directory name)
+              name))))
 
 ;;;###autoload
 (defun shell-pwd-directory-tracker (&rest _args)
