@@ -35,6 +35,7 @@
 
 ;;; Code:
 
+(require 'subr-x)
 (require 'tramp)
 
 (defgroup shell-pwd nil
@@ -65,24 +66,19 @@ string will be used as buffer name."
 If `DIRECTORY' does not end with a slash, it will be considered
 as a file.
 /home/user/some/file -> /h/u/some/file"
-  (let ((count (1- (cl-count ?/ directory)))
-        (can-append t)
-        (slashes 0)
-        (idx -1)
-        (result ""))
-    (while (< slashes count)
-      (let ((c (aref directory (cl-incf idx))))
-        (cond ((= c ?/)
-               (cl-callf concat result "/")
-               (setq can-append t)
-               (cl-incf slashes))
-              ((and (= c ?.) can-append)
-               (cl-callf concat result ".")
-               (setq can-append t))
-              (can-append
-               (cl-callf concat result (char-to-string c))
-               (setq can-append nil)))))
-    (cl-callf concat result (substring directory (1+ idx)))))
+  (if (string-match (rx string-start
+                        (group (+? anything) "/")
+                        (group (+ (not (in ?/))) "/" (? (+ (not (in ?/)))))
+                        string-end)
+                    directory)
+      (let ((to-shorten (match-string 1 directory))
+            (unchanged (match-string 2 directory)))
+        (concat
+         (string-join (mapcar (lambda (s) (substring s 0 (min 1 (length s))))
+                              (split-string to-shorten "/"))
+                      "/")
+         unchanged))
+    directory))
 
 (defun shell-pwd-generate-buffer-name (dir)
   "Generate new shell buffer name based on `DIR'.
@@ -115,4 +111,5 @@ Put this in `comint-input-filter-functions' after
             t t))
 
 (provide 'shell-pwd)
+
 ;;; shell-pwd.el ends here
