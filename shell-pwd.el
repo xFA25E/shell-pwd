@@ -59,6 +59,13 @@ string will be used as buffer name."
   "Variable used to check for directory change.")
 (make-variable-buffer-local 'shell-pwd--previous-directory)
 
+(defun shell-pwd--cut-file-name (file-name)
+  "Cut `FILE-NAME' to a length of 1 or 2.
+.name -> .n
+ name -> n"
+  (substring file-name 0 (min (if (string-prefix-p "." file-name) 2 1)
+                              (length file-name))))
+
 (defun shell-pwd-shorten-directory (directory)
   "Shortens `DIRECTORY'.
 /home/user/some/dir/ -> /h/u/s/dir/
@@ -71,13 +78,12 @@ as a file.
                         (group (+ (not (in ?/))) "/" (? (+ (not (in ?/)))))
                         string-end)
                     directory)
-      (let ((to-shorten (match-string 1 directory))
-            (unchanged (match-string 2 directory)))
-        (concat
-         (string-join (mapcar (lambda (s) (substring s 0 (min 1 (length s))))
+      (let* ((to-shorten (match-string 1 directory))
+             (unchanged (match-string 2 directory)))
+        (thread-first (mapcar #'shell-pwd--cut-file-name
                               (split-string to-shorten "/"))
-                      "/")
-         unchanged))
+          (string-join "/")
+          (concat unchanged)))
     directory))
 
 (defun shell-pwd-generate-buffer-name (dir)
