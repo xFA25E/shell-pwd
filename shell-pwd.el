@@ -32,6 +32,7 @@
 ;; If you like the default name generating function, but you don't
 ;; want directory path shorten, set shell-pwd-shorten-directory to nil.
 
+;; Use shell-pwd-switch-to-buffer to manage shell buffers.
 ;;; Code:
 
 (require 'subr-x)

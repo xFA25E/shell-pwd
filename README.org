@@ -4,6 +4,11 @@ This package can display shell working directory in a buffer name. To enable
 just add ~shell-pwd-enable~ to ~shell-mode-hook~:
 
 ~(add-hook 'shell-mode-hook 'shell-pwd-enable)~
+
+or
+
+just use ~shell-pwd-switch-to-buffer~ to manage shell buffers, instead of
+~shell~.  This command will set up all necessary tracking.
 * Customization
 You can customize how new buffer name is chosen through
 ~shell-pwd-generate-buffer-name-function~. Set to it your custom function. This
