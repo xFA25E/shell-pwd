@@ -25,10 +25,9 @@
 ;; (add-hook 'shell-mode-hook 'shell-pwd-enable)
 
 ;; You can customize how new buffer name is chosen through
-;; shell-pwd-generate-buffer-name-function. Set to it your custom
-;; function. This funciton should take a string as an argumnt and
-;; return a string. The resulting string will be used as new buffer
-;; name.
+;; shell-pwd-generate-buffer-name-function.  Set to it your custom function.
+;; This funciton should take a string as an argumnt and return a string.  The
+;; resulting string will be used as new buffer name.
 
 ;; If you like the default name generating function, but you don't
 ;; want directory path shorten, set shell-pwd-shorten-directory to nil.
@@ -45,7 +44,7 @@
 (defcustom shell-pwd-generate-buffer-name-function
   #'shell-pwd-generate-buffer-name
   "Function called when generating new buffer name.
-Should accept one string argument and return a string. Returned
+Should accept one string argument and return a string.  Returned
 string will be used as buffer name."
   :type 'function
   :group 'shell-pwd)
@@ -115,6 +114,21 @@ Put this in `comint-input-filter-functions' after
   (add-hook 'comint-input-filter-functions
             #'shell-pwd-directory-tracker
             t t))
+
+;;;###autoload
+(cl-defun shell-pwd-switch-to-buffer (&optional (directory default-directory))
+  "Show a list of shell buffers and suggest to create a new one in `DIRECTORY'."
+  (interactive
+   (list (if current-prefix-arg
+             (expand-file-name (read-directory-name "Default directory: "))
+           default-directory)))
+  (cl-flet ((shell-buffer-p (b) (eq (buffer-local-value 'major-mode b) 'shell-mode))
+            (pwd-buffer () (shell-pwd-generate-buffer-name directory)))
+    (let* ((buffer-name (generate-new-buffer-name (pwd-buffer)))
+           (shell-buffers (mapcar #'buffer-name (cl-delete-if-not #'shell-buffer-p (buffer-list))))
+           (name (completing-read "Shell buffer: " (cons buffer-name shell-buffers))))
+      (if-let ((buffer (get-buffer name))) (pop-to-buffer buffer) (shell name))))
+  (shell-pwd-enable))
 
 (provide 'shell-pwd)
 
