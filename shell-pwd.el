@@ -36,6 +36,7 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'files)
 (require 'tramp)
 
 (defgroup shell-pwd nil
@@ -73,10 +74,10 @@ string will be used as buffer name."
 If `DIRECTORY' does not end with a slash, it will be considered
 as a file.
 /home/user/some/file -> /h/u/some/file"
-  (if (string-match (rx string-start
+  (if (string-match (rx bos
                         (group (+? anything) "/")
-                        (group (+ (not (in ?/))) "/" (? (+ (not (in ?/)))))
-                        string-end)
+                        (group (+ (not "/")) "/" (* (not "/")))
+                        eos)
                     directory)
       (let* ((to-shorten (match-string 1 directory))
              (unchanged (match-string 2 directory)))
@@ -94,7 +95,7 @@ If `DIR' is a remote directory, add tramp host and method to generated name"
         (user (if-let ((user (file-remote-p dir 'user))) (concat user "@") "")))
     (format "*sh %s%s%s*" user host
             (if shell-pwd-shorten-directory
-                (shell-pwd-shorten-directory name)
+                (shell-pwd-shorten-directory (abbreviate-file-name name))
               name))))
 
 ;;;###autoload
