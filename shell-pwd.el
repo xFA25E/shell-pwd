@@ -74,18 +74,19 @@ string will be used as buffer name."
 If `DIRECTORY' does not end with a slash, it will be considered
 as a file.
 /home/user/some/file -> /h/u/some/file"
-  (if (string-match (rx bos
-                        (group (+? anything) "/")
-                        (group (+ (not "/")) "/" (* (not "/")))
-                        eos)
-                    directory)
-      (let* ((to-shorten (match-string 1 directory))
-             (unchanged (match-string 2 directory)))
-        (thread-first (mapcar #'shell-pwd--cut-file-name
-                              (split-string to-shorten "/"))
-          (string-join "/")
-          (concat unchanged)))
-    directory))
+  (save-match-data
+    (if (string-match (rx bos
+                          (group (+? anything) "/")
+                          (group (+ (not "/")) "/" (* (not "/")))
+                          eos)
+                      directory)
+        (let ((to-shorten (match-string 1 directory))
+              (unchanged (match-string 2 directory)))
+          (thread-first (mapcar #'shell-pwd--cut-file-name
+                                (split-string to-shorten "/"))
+            (string-join "/")
+            (concat unchanged)))
+      directory)))
 
 (defun shell-pwd-generate-buffer-name (dir)
   "Generate new shell buffer name based on `DIR'.
