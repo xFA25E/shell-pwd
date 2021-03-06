@@ -38,6 +38,7 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'tramp)
 (require 'files)
 
 (defvar shell-pwd--previous-directory ""
@@ -99,12 +100,13 @@ Put this in `comint-input-filter-functions' after
   (add-hook 'comint-input-filter-functions #'shell-pwd-directory-tracker t t))
 
 ;;;###autoload
-(cl-defun shell-pwd-shell (&optional (directory default-directory))
+(defun shell-pwd-shell (&optional directory)
   (interactive
    (list (if current-prefix-arg
              (expand-file-name (read-directory-name "Default directory: "))
            default-directory)))
-  (shell (generate-new-buffer-name (shell-pwd-generate-buffer-name directory)))
+  (shell (generate-new-buffer-name (shell-pwd-generate-buffer-name
+                                    (or directory default-directory))))
   (shell-pwd-enable))
 
 (provide 'shell-pwd)
