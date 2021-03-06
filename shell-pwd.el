@@ -33,11 +33,12 @@
 ;; want directory path shorten, set shell-pwd-shorten-directory to nil.
 
 ;; Use shell-pwd-switch-to-buffer to manage shell buffers.
+;; M-x shell-pwd-shell
+
 ;;; Code:
 
 (require 'subr-x)
 (require 'files)
-(require 'tramp)
 
 (defvar shell-pwd--previous-directory ""
   "Variable used to check for directory change.")
@@ -96,6 +97,15 @@ Put this in `comint-input-filter-functions' after
 (defun shell-pwd-enable ()
   "Put this into the `shell-mode-hook'."
   (add-hook 'comint-input-filter-functions #'shell-pwd-directory-tracker t t))
+
+;;;###autoload
+(cl-defun shell-pwd-shell (&optional (directory default-directory))
+  (interactive
+   (list (if current-prefix-arg
+             (expand-file-name (read-directory-name "Default directory: "))
+           default-directory)))
+  (shell (generate-new-buffer-name (shell-pwd-generate-buffer-name directory)))
+  (shell-pwd-enable))
 
 (provide 'shell-pwd)
 
