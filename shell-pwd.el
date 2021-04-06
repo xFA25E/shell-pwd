@@ -2,8 +2,11 @@
 
 ;; Copyright (C) 2019
 
-;; Author: xFA25E
-;; Keywords: terminals, extensions
+;; Author: Valeriy Litkovskyy <vlr.ltkvsk@protonmail.com>
+;; Version: 0.1.0
+;; Keywords: processes, terminals, unix
+;; URL: https://github.com/xFA25E/shell-pwd
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,16 +27,14 @@
 ;; To enable just add shell-pwd-enable to shell-mode-hook:
 ;; (add-hook 'shell-mode-hook 'shell-pwd-enable)
 
-;; You can customize how new buffer name is chosen through
-;; shell-pwd-generate-buffer-name-function.  Set to it your custom function.
-;; This funciton should take a string as an argumnt and return a string.  The
-;; resulting string will be used as new buffer name.
+;; You can customize how new buffer name is chosen by creating an :override
+;; advice for shell-pwd-generate-buffer-name function.  This function should
+;; take a directory string as an argumnt and return a string.  The resulting
+;; string will be used as new buffer name.
 
-;; If you like the default name generating function, but you don't
-;; want directory path shorten, set shell-pwd-shorten-directory to nil.
-
-;; Use shell-pwd-switch-to-buffer to manage shell buffers.
-;; M-x shell-pwd-shell
+;; There is also a shell-pwd-shell command, that calls M-x shell with shell-pwd
+;; already set.  The purpose of this command is to replace M-x shell, because
+;; maybe you don't want to enable shell-pwd in a project shell.
 
 ;;; Code:
 
@@ -41,16 +42,16 @@
 (require 'tramp)
 (require 'files)
 
-(defvar shell-pwd--previous-directory ""
+(defvar-local shell-pwd--previous-directory ""
   "Variable used to check for directory change.")
-(make-variable-buffer-local 'shell-pwd--previous-directory)
 
-(defun shell-pwd--cut-file-name (file-name)
-  "Cut `FILE-NAME' to a length of 1 or 2.
-.name -> .n
- name -> n"
-  (substring file-name 0 (min (if (string-prefix-p "." file-name) 2 1)
-                              (length file-name))))
+(defun shell-pwd--first-letter (file-name)
+  "Return `FILE-NAME's first letter.
+If `FILE-NAME' starts with a point, return point and first letter.
+
+.name -> .n | name -> n"
+  (let ((limit (if (string-prefix-p "." file-name) 2 1)))
+    (substring file-name 0 (min limit (length file-name)))))
 
 (defun shell-pwd-shorten-directory (directory)
   "Shortens `DIRECTORY'.
@@ -58,6 +59,7 @@
 
 If `DIRECTORY' does not end with a slash, it will be considered
 as a file.
+
 /home/user/some/file -> /h/u/some/file
 
 It is abbreviated with `ABBREVIATE-FILE-NAME' first, so user
@@ -71,7 +73,7 @@ directory may change to tilde."
                         directory)
           (let ((to-shorten (match-string 1 directory))
                 (unchanged  (match-string 2 directory)))
-            (thread-first (mapcar #'shell-pwd--cut-file-name
+            (thread-first (mapcar #'shell-pwd--first-letter
                                   (split-string to-shorten "/"))
               (string-join "/")
               (concat unchanged)))
@@ -79,7 +81,8 @@ directory may change to tilde."
 
 (defun shell-pwd-generate-buffer-name (dir)
   "Generate new shell buffer name based on `DIR'.
-If `DIR' is a remote directory, add tramp host and method to generated name"
+If `DIR' is a remote directory, add tramp host and method to
+generated name"
   (let ((name (or (file-remote-p dir 'localname) dir))
         (host (if-let ((host (file-remote-p dir 'host))) (concat host " ") ""))
         (user (if-let ((user (file-remote-p dir 'user))) (concat user "@") "")))
@@ -97,17 +100,25 @@ Put this in `comint-input-filter-functions' after
 ;;;###autoload
 (defun shell-pwd-enable ()
   "Put this into the `shell-mode-hook'."
-  (add-hook 'comint-input-filter-functions #'shell-pwd-directory-tracker t t))
+  (add-hook 'comint-input-filter-functions
+            #'shell-pwd-directory-tracker
+            t t))
 
 ;;;###autoload
 (defun shell-pwd-shell (&optional directory)
+  "`shell' replacement with shell-pwd set.
+You this if you want to preserve `project-shell's behaviour.
+With prefix argument start it in a `DIRECTORY'."
   (interactive
    (list (if current-prefix-arg
              (expand-file-name (read-directory-name "Default directory: "))
            default-directory)))
-  (shell (generate-new-buffer-name (shell-pwd-generate-buffer-name
-                                    (or directory default-directory))))
-  (shell-pwd-enable))
+
+  (let* ((default-directory (or directory default-directory))
+         (buffer-name (shell-pwd-generate-buffer-name default-directory))
+         (unique-buffer-name (generate-new-buffer-name buffer-name)))
+    (shell unique-buffer-name)
+    (shell-pwd-enable)))
 
 (provide 'shell-pwd)
 
