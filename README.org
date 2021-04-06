@@ -1,5 +1,7 @@
 #+TITLE: shell-pwd
 
+[[shell-pwd-scrot.png]]
+
 This package can display shell working directory in a buffer name.  To enable
 just add shell-pwd-enable to shell-mode-hook:
 
