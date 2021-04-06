@@ -1,4 +1,4 @@
-;;; shell-pwd.el --- Dispaly shell working directory in buffer name.  -*- lexical-binding: t; -*-
+;;; shell-pwd.el --- Dispaly shell working directory in buffer name -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019
 
