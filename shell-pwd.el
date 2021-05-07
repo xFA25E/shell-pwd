@@ -117,7 +117,8 @@ With prefix argument start it in a `DIRECTORY'."
   (let* ((default-directory (or directory default-directory))
          (buffer-name (shell-pwd-generate-buffer-name default-directory))
          (unique-buffer-name (generate-new-buffer-name buffer-name)))
-    (shell unique-buffer-name)
+    (call-interactively 'shell)
+    (rename-buffer unique-buffer-name t)
     (shell-pwd-enable)))
 
 (provide 'shell-pwd)
