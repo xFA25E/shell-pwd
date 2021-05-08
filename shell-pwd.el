@@ -126,41 +126,32 @@ Use this if you want to preserve `project-shell's behaviour."
     (insert (concat "cd " (shell-quote-argument (expand-file-name dir)))))
   (comint-send-input))
 
-(defun shell-pwd--count-shell-buffers ()
-  "Count shell buffers."
-  (cl-loop
-   for buffer being the buffers
-   count (provided-mode-derived-p
-          (buffer-local-value 'major-mode buffer) 'shell-mode)))
-
 ;;;###autoload
 (defun shell-pwd-list-buffers (&optional other-window-p)
   "Open shell buffers in ibuffer.
 `OTHER-WINDOW-P' is like in `ibuffer'."
   (interactive "P")
-  (if (zerop (shell-pwd--count-shell-buffers))
-      (message "No shell buffers!")
-    (let ((buffer-name "*Shell buffers*"))
-      (ibuffer other-window-p buffer-name `((mode . shell-mode)) nil nil
-               '(("Shells" (name . "\\`\\*sh "))
-                 ("Async shell commands" (name . "\\`\\*Async Shell Command\\*")))
-               '((mark " " (name 40 50 :left :elide) " " filename-and-process)))
-      (with-current-buffer buffer-name
-        (let ((map (make-sparse-keymap)))
-          (set-keymap-parent map (current-local-map))
-          (define-key map [remap quit-window]
-            (lambda () (interactive) (quit-window t)))
-          (define-key map [remap ibuffer-visit-buffer]
-            (lambda () (interactive)
-              (let ((buffer (current-buffer)))
-                (call-interactively 'ibuffer-visit-buffer)
-                (kill-buffer buffer))))
-          (use-local-map map))
+  (let ((buffer-name "*Shell buffers*"))
+    (ibuffer other-window-p buffer-name `((mode . shell-mode)) nil nil
+             '(("Shells" (name . "\\`\\*sh "))
+               ("Async shell commands" (name . "\\`\\*Async Shell Command\\*")))
+             '((mark " " (name 40 50 :left :elide) " " filename-and-process)))
+    (with-current-buffer buffer-name
+      (let ((map (make-sparse-keymap)))
+        (set-keymap-parent map (current-local-map))
+        (define-key map [remap quit-window]
+          (lambda () (interactive) (quit-window t)))
+        (define-key map [remap ibuffer-visit-buffer]
+          (lambda () (interactive)
+            (let ((buffer (current-buffer)))
+              (call-interactively 'ibuffer-visit-buffer)
+              (kill-buffer buffer))))
+        (use-local-map map))
 
-        (setq-local ibuffer-use-header-line nil)
-        (ibuffer-auto-mode)
-        (ibuffer-update nil t)
-        (hl-line-mode t)))))
+      (setq-local ibuffer-use-header-line nil)
+      (ibuffer-auto-mode)
+      (ibuffer-update nil t)
+      (hl-line-mode t))))
 
 (provide 'shell-pwd)
 
