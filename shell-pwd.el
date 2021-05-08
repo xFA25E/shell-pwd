@@ -100,6 +100,7 @@ Put this in `comint-input-filter-functions' after
 ;;;###autoload
 (defun shell-pwd-enable ()
   "Put this into the `shell-mode-hook'."
+  (shell-pwd-directory-tracker)
   (add-hook 'comint-input-filter-functions
             #'shell-pwd-directory-tracker
             t t))
@@ -113,13 +114,9 @@ With prefix argument start it in a `DIRECTORY'."
    (list (if current-prefix-arg
              (expand-file-name (read-directory-name "Default directory: "))
            default-directory)))
-
-  (let* ((default-directory (or directory default-directory))
-         (buffer-name (shell-pwd-generate-buffer-name default-directory))
-         (unique-buffer-name (generate-new-buffer-name buffer-name)))
-    (call-interactively 'shell)
-    (rename-buffer unique-buffer-name t)
-    (shell-pwd-enable)))
+  (let ((default-directory (or directory default-directory)))
+    (with-current-buffer (call-interactively 'shell)
+      (shell-pwd-enable))))
 
 (provide 'shell-pwd)
 
