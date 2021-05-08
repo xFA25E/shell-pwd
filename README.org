@@ -11,16 +11,15 @@ just add ~shell-pwd-enable~ to ~shell-mode-hook~:
 
 *OR*
 
-#+begin_src emacs-lisp
-  (use-package shell-pwd
-    :hook (shell-mode . shell-pwd-enable))
-#+end_src
-
-*OR*
-
 Just call ~shell-pwd-shell~.  It calls ~shell~ with /shell-pwd/ set correctly.
 The purpose of this command is to replace ~M-x shell~, because, maybe, you don't
 want to enable /shell-pwd/ in ~project-shell~.
+
+* Additional commands
+  - shell-pwd-list-buffers :: List shells in ibuffer.  Exit or select will
+    automaticall kill ibuffer buffer.
+  - shell-pwd-change-directory :: While in shell-mode buffer, you can call this
+    command to interactively change directory in shell.
 
 * Customization
   You can customize how new buffer name is chosen by creating an ~:override~
