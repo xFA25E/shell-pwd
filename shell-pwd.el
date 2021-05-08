@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019
 
 ;; Author: Valeriy Litkovskyy <vlr.ltkvsk@protonmail.com>
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Keywords: processes, terminals, unix
 ;; URL: https://github.com/xFA25E/shell-pwd
 ;; Package-Requires: ((emacs "25.1"))
@@ -38,9 +38,13 @@
 
 ;;; Code:
 
+(require 'cl-macs)
+(require 'files)
+(require 'ibuffer)
+(require 'shell)
 (require 'subr-x)
 (require 'tramp)
-(require 'files)
+
 
 (defvar-local shell-pwd--previous-directory ""
   "Variable used to check for directory change.")
@@ -100,22 +104,63 @@ Put this in `comint-input-filter-functions' after
 ;;;###autoload
 (defun shell-pwd-enable ()
   "Put this into the `shell-mode-hook'."
-  (shell-pwd-directory-tracker)
-  (add-hook 'comint-input-filter-functions
-            #'shell-pwd-directory-tracker
-            t t))
+  (add-hook 'comint-input-filter-functions #'shell-pwd-directory-tracker t t)
+  (shell-pwd-directory-tracker))
 
 ;;;###autoload
-(defun shell-pwd-shell (&optional dir)
+(defun shell-pwd-shell ()
   "`shell' replacement with shell-pwd set.
-You this if you want to preserve `project-shell's behaviour.
-With prefix argument start it in a `DIR'."
-  (interactive
-   (list (when current-prefix-arg
-           (expand-file-name (read-directory-name "Default directory: ")))))
-  (let ((default-directory (or dir default-directory)))
-    (with-current-buffer (call-interactively 'shell)
-      (shell-pwd-enable))))
+Use this if you want to preserve `project-shell's behaviour."
+  (interactive)
+  (with-current-buffer (call-interactively 'shell)
+    (shell-pwd-enable)))
+
+;;;###autoload
+(defun shell-pwd-change-directory ()
+  "Change directory in a shell, interactively."
+  (interactive)
+  (comint-show-maximum-output)
+  (comint-delete-input)
+  (let* ((read-dir (read-directory-name "Change directory: "))
+         (dir (or (file-remote-p read-dir 'localname) read-dir)))
+    (insert (concat "cd " (shell-quote-argument (expand-file-name dir)))))
+  (comint-send-input))
+
+(defun shell-pwd--count-shell-buffers ()
+  "Count shell buffers."
+  (cl-loop
+   for buffer being the buffers
+   count (provided-mode-derived-p
+          (buffer-local-value 'major-mode buffer) 'shell-mode)))
+
+;;;###autoload
+(defun shell-pwd-list-buffers (&optional other-window-p)
+  "Open shell buffers in ibuffer.
+`OTHER-WINDOW-P' is like in `ibuffer'."
+  (interactive "P")
+  (if (zerop (shell-pwd--count-shell-buffers))
+      (message "No shell buffers!")
+    (let ((buffer-name "*Shell buffers*"))
+      (ibuffer other-window-p buffer-name `((mode . shell-mode)) nil nil
+               '(("Shells" (name . "\\`\\*sh "))
+                 ("Async shell commands" (name . "\\`\\*Async Shell Command\\*")))
+               '((mark " " (name 40 50 :left :elide) " " filename-and-process)))
+      (with-current-buffer buffer-name
+        (let ((map (make-sparse-keymap)))
+          (set-keymap-parent map (current-local-map))
+          (define-key map [remap quit-window]
+            (lambda () (interactive) (quit-window t)))
+          (define-key map [remap ibuffer-visit-buffer]
+            (lambda () (interactive)
+              (let ((buffer (current-buffer)))
+                (call-interactively 'ibuffer-visit-buffer)
+                (kill-buffer buffer))))
+          (use-local-map map))
+
+        (setq-local ibuffer-use-header-line nil)
+        (ibuffer-auto-mode)
+        (ibuffer-update nil t)
+        (hl-line-mode t)))))
 
 (provide 'shell-pwd)
 
