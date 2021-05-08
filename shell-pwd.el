@@ -6,7 +6,7 @@
 ;; Version: 0.1.1
 ;; Keywords: processes, terminals, unix
 ;; URL: https://github.com/xFA25E/shell-pwd
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@
 
 ;;; Code:
 
-(require 'cl-macs)
+(require 'cl-lib)
 (require 'files)
 (require 'ibuffer)
 (require 'shell)
