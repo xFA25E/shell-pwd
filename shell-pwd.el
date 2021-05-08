@@ -106,15 +106,14 @@ Put this in `comint-input-filter-functions' after
             t t))
 
 ;;;###autoload
-(defun shell-pwd-shell (&optional directory)
+(defun shell-pwd-shell (&optional dir)
   "`shell' replacement with shell-pwd set.
 You this if you want to preserve `project-shell's behaviour.
-With prefix argument start it in a `DIRECTORY'."
+With prefix argument start it in a `DIR'."
   (interactive
-   (list (if current-prefix-arg
-             (expand-file-name (read-directory-name "Default directory: "))
-           default-directory)))
-  (let ((default-directory (or directory default-directory)))
+   (list (when current-prefix-arg
+           (expand-file-name (read-directory-name "Default directory: ")))))
+  (let ((default-directory (or dir default-directory)))
     (with-current-buffer (call-interactively 'shell)
       (shell-pwd-enable))))
 
