@@ -25,33 +25,16 @@
 (require 'ert)
 (require 'shell-pwd)
 
-(ert-deftest shell-pwd-test-first-letter ()
-  "Test first-letter function."
-  (should (string= (shell-pwd--first-letter "hello world") "h"))
-  (should (string= (shell-pwd--first-letter ".hello world") ".h"))
-  (should (string= (shell-pwd--first-letter "") "")))
-
 (ert-deftest shell-pwd-test-shorten-directory ()
   "Test shorten directory function"
   (should (string= (shell-pwd-shorten-directory "/hello/world/my/lady/")
-                        "/h/w/m/lady/"))
+                        "/h/w/m/lady"))
   (should (string= (shell-pwd-shorten-directory "/hello/world/my/boi")
-                        "/h/w/my/boi"))
+                        "/h/w/m/boi"))
   (should (string= (shell-pwd-shorten-directory (expand-file-name "some/dir/" (getenv "HOME")))
-                        "~/s/dir/"))
+                        "~/s/dir"))
   (should (string= (shell-pwd-shorten-directory "/dir/.hidden/.other/hidden/")
-                        "/d/.h/.o/hidden/")))
-
-(ert-deftest shell-pwd-test-generate-buffer-name ()
-  "Test buffer name generation"
-  (should (string= (shell-pwd-generate-buffer-name "/some/dir/very/deep/")
-                        "*sh /s/d/v/deep/*"))
-  (should (string= (shell-pwd-generate-buffer-name "/ssh:user@host:/another/deep/dir/")
-                        "*sh user@host /a/d/dir/*"))
-  (should (string= (shell-pwd-generate-buffer-name "/ssh:user@host:relative/deep/dir/")
-                        "*sh user@host r/d/dir/*"))
-  (should (string= (shell-pwd-generate-buffer-name "/ssh:host:/dir/my/what/")
-                        "*sh host /d/m/what/*")))
+                        "/d/.h/.o/hidden")))
 
 (provide 'shell-pwd-test)
 ;;; shell-pwd-test.el ends here
